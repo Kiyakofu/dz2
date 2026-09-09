@@ -1,0 +1,683 @@
+#include <iostream>
+#include <fstream>
+#include <cstring>
+
+using namespace std;
+
+// class Reservoir
+
+class Reservoir
+{
+private:
+    char name[50];       // nazva vodoimy
+    char type[30];       // typ vodoimy
+
+    double width;        // shyryna
+    double length;       // dovzhyna
+    double maxDepth;     // maksymalna hlybyna
+
+public:
+
+    // Konstruktor za zamovchuvannyam
+    Reservoir()
+    {
+        strcpy(name, "Bez nazvy");
+        strcpy(type, "Nevidomyi");
+
+        width = 0;
+        length = 0;
+        maxDepth = 0;
+    }
+
+    // Explicit konstruktor
+    explicit Reservoir(const char* n)
+    {
+        strcpy(name, n);
+        strcpy(type, "Nevidomyi");
+
+        width = 0;
+        length = 0;
+        maxDepth = 0;
+    }
+
+    // Konstruktor z parametramy
+    Reservoir(const char* n,
+        const char* t,
+        double w,
+        double l,
+        double d)
+    {
+        strcpy(name, n);
+        strcpy(type, t);
+
+        width = w;
+        length = l;
+        maxDepth = d;
+    }
+
+    // Konstruktor kopiyuvannya
+    Reservoir(const Reservoir& other)
+    {
+        strcpy(name, other.name);
+        strcpy(type, other.type);
+
+        width = other.width;
+        length = other.length;
+        maxDepth = other.maxDepth;
+    }
+
+    // Destruktor
+    ~Reservoir()
+    {
+    }
+
+    // SET
+
+    void setName(const char* n)
+    {
+        strcpy(name, n);
+    }
+
+    void setType(const char* t)
+    {
+        strcpy(type, t);
+    }
+
+    void setWidth(double w)
+    {
+        if (w >= 0)
+            width = w;
+    }
+
+    void setLength(double l)
+    {
+        if (l >= 0)
+            length = l;
+    }
+
+    void setMaxDepth(double d)
+    {
+        if (d >= 0)
+            maxDepth = d;
+    }
+
+    // GET
+
+    const char* getName() const
+    {
+        return name;
+    }
+
+    const char* getType() const
+    {
+        return type;
+    }
+
+    double getWidth() const
+    {
+        return width;
+    }
+
+    double getLength() const
+    {
+        return length;
+    }
+
+    double getMaxDepth() const
+    {
+        return maxDepth;
+    }
+
+    // 1. Vyznachennya obsyahu
+    // shyryna * dovzhyna * maksymalna hlybyna
+
+    double volume() const
+    {
+        return width * length * maxDepth;
+    }
+
+    // 2. Vyznachennya ploshchi
+
+    double area() const
+    {
+        return width * length;
+    }
+
+    // 3. Perevirka odnakovoho typu
+
+    bool sameType(const Reservoir& other) const
+    {
+        return strcmp(type, other.type) == 0;
+    }
+
+    // 4. Porivnyannya ploshchi vodoim odnoho typu
+    //
+    //  1  - ploshcha potochnoyi vodoimy bilsha
+    // -1  - ploshcha potochnoyi vodoimy mensha
+    //  0  - ploshchi odnakovi
+    // -2  - rizni typy
+
+    int compareArea(const Reservoir& other) const
+    {
+        if (!sameType(other))
+            return -2;
+
+        if (area() > other.area())
+            return 1;
+
+        if (area() < other.area())
+            return -1;
+
+        return 0;
+    }
+
+    // 5. Kopiyuvannya obyekta
+
+    void copyFrom(const Reservoir& other)
+    {
+        strcpy(name, other.name);
+        strcpy(type, other.type);
+
+        width = other.width;
+        length = other.length;
+        maxDepth = other.maxDepth;
+    }
+
+    // Vyvedennya informatsiyi
+    // const-funktsiya-chlen
+
+    void print() const
+    {
+        cout << "Nazva: " << name << endl;
+        cout << "Typ: " << type << endl;
+        cout << "Shyryna: " << width << endl;
+        cout << "Dovzhyna: " << length << endl;
+        cout << "Maksymalna hlybyna: " << maxDepth << endl;
+        cout << "Ploshcha vodnoyi poverkhni: " << area() << endl;
+        cout << "Pryblyznyi obsyah: " << volume() << endl;
+    }
+};
+
+
+// dynamichnyi masyv reservoir
+
+class ReservoirArray
+{
+private:
+    Reservoir* data;
+    int size;
+    int capacity;
+
+    // Zbilshennya rozmiru masyvu
+
+    void resize()
+    {
+        capacity *= 2;
+        Reservoir* temp = new Reservoir[capacity];
+
+        for (int i = 0; i < size; i++)
+        {
+            temp[i] = data[i];
+        }
+
+        delete[] data;
+        data = temp;
+    }
+
+public:
+
+    // Konstruktor
+
+    ReservoirArray()
+    {
+        size = 0;
+        capacity = 2;
+        data = new Reservoir[capacity];
+    }
+
+    // Destruktor
+
+    ~ReservoirArray()
+    {
+        delete[] data;
+    }
+
+    // Dodavannya obyekta
+
+    void add(const Reservoir& r)
+    {
+        if (size == capacity)
+        {
+            resize();
+        }
+
+        data[size] = r;
+        size++;
+    }
+
+    // Vydalennya obyekta
+
+    void remove(int index)
+    {
+        if (index < 0 || index >= size)
+        {
+            cout << "Nepravylnyi nomer vodoimy" << endl;
+        }
+
+        for (int i = index; i < size - 1; i++)
+        {
+            data[i] = data[i + 1];
+        }
+
+        size--;
+
+        cout << "Vodoimu vydaleno" << endl;
+    }
+
+    // Otrymannya obyekta
+
+    Reservoir& get(int index)
+    {
+        return data[index];
+    }
+
+    // const-versiya get
+
+    const Reservoir& get(int index) const
+    {
+        return data[index];
+    }
+
+    // Otrymannya kilkosti obyektiv
+
+    int getSize() const
+    {
+        return size;
+    }
+
+    // Vyvedennya vsikh vodoim
+
+    void printAll() const
+    {
+        if (size == 0)
+        {
+            cout << "Masiv porozhniy" << endl;
+        }
+
+        for (int i = 0; i < size; i++)
+        {
+            cout << endl;
+            cout << "==================================" << endl;
+            cout << "Vodoima " << i + 1 << endl;
+            cout << "==================================" << endl;
+
+            data[i].print();
+        }
+    }
+
+    // Zapys u tekstovyi fail
+
+    void saveText(const char* filename) const
+    {
+        ofstream file(filename);
+
+        if (!file)
+        {
+            cout << "Pomylka vidkryttya tekstovoho failu" << endl;
+        }
+
+        file << "Kilkist vodoim: "
+            << size << endl << endl;
+
+        for (int i = 0; i < size; i++)
+        {
+            file << "==================================" << endl;
+            file << "Vodoima " << i + 1 << endl;
+            file << "==================================" << endl;
+
+            file << "Nazva: " << data[i].getName() << endl;
+
+            file << "Typ: " << data[i].getType() << endl;
+
+            file << "Shyryna: " << data[i].getWidth() << endl;
+
+            file << "Dovzhyna: " << data[i].getLength() << endl;
+
+            file << "Maksymalna hlybyna: " << data[i].getMaxDepth() << endl;
+               
+            file << "Ploshcha vodnoyi poverkhni: " << data[i].area() << endl;
+               
+            file << "Pryblyznyi obsyah: " << data[i].volume() << endl;
+               
+            file << endl;
+        }
+
+        file.close();
+
+        cout << "Dani zapysano u fail "
+            << filename << endl;
+    }
+
+    // Zapys u binarnyi fail
+
+    void saveBinary(const char* filename) const
+    {
+        ofstream file(filename, ios::binary);
+
+        if (!file)
+        {
+            cout << "Pomylka vidkryttya binarnoho failu" << endl;
+        }
+
+        // Zapys kilkosti obyektiv
+
+        file.write(
+            reinterpret_cast<const char*>(&size),
+            sizeof(size)
+        );
+
+        // Zapys usikh obyektiv
+
+        for (int i = 0; i < size; i++)
+        {
+            file.write(
+                reinterpret_cast<const char*>(&data[i]),
+                sizeof(Reservoir)
+            );
+        }
+
+        file.close();
+
+        cout << "Dani zapysano u fail "
+            << filename << endl;
+    }
+};
+
+
+// menyu prohramy
+
+void showMenu()
+{
+    cout << endl;
+    cout << "====================================" << endl;
+    cout << "       MENYU PROHRAMY" << endl;
+    cout << "====================================" << endl;
+
+    cout << "1. Dodaty vodoimu" << endl;
+    cout << "2. Pokazaty vsi vodoimy" << endl;
+    cout << "3. Vydalyty vodoimu" << endl;
+    cout << "4. Porivnyaty dvi vodoimy" << endl;
+    cout << "5. Skopiyuvaty vodoimu" << endl;
+    cout << "6. Zapys u tekstovyi fail" << endl;
+    cout << "7. Zapys u binarnyi fail" << endl;
+    cout << "0. Vykhid" << endl;
+
+    cout << "====================================" << endl;
+    cout << "Vash vybir: ";
+}
+
+// dodavannya vodoimy
+
+void addReservoir(ReservoirArray& reservoirs)
+{
+    char name[50];
+    char type[30];
+
+    double width;
+    double length;
+    double depth;
+
+    cin.ignore();
+
+    cout << "Vvedit nazvu vodoimy: ";
+    cin.getline(name, 50);
+
+    cout << "Vvedit typ vodoimy: ";
+    cin.getline(type, 30);
+
+    cout << "Vvedit shyrynu: ";
+    cin >> width;
+
+    cout << "Vvedit dovzhynu: ";
+    cin >> length;
+
+    cout << "Vvedit maksymalnu hlybynu: ";
+    cin >> depth;
+
+    Reservoir r(
+        name,
+        type,
+        width,
+        length,
+        depth
+    );
+
+    reservoirs.add(r);
+
+    cout << "Vodoimu uspishno dodano" << endl;
+}
+
+// vydalennya vodoimy
+
+void removeReservoir(ReservoirArray& reservoirs)
+{
+    if (reservoirs.getSize() == 0)
+    {
+        cout << "Masiv porozhniy" << endl;
+    }
+
+    int number;
+
+    cout << "Vvedit nomer vodoimy: ";
+    cin >> number;
+
+    reservoirs.remove(number - 1);
+}
+
+// porivnyannya dvoh vodoim
+
+void compareReservoirs(
+    const ReservoirArray& reservoirs)
+{
+    if (reservoirs.getSize() < 2)
+    {
+        cout << "Potribno shchonaimenshe 2 vodoimy" << endl;
+    }
+
+    int first;
+    int second;
+
+    cout << "Vvedit nomer pershoyi vodoimy: ";
+    cin >> first;
+
+    cout << "Vvedit nomer drugoyi vodoimy: ";
+    cin >> second;
+
+    first--;
+    second--;
+
+    if (first < 0 || first >= reservoirs.getSize() || second < 0 || second >= reservoirs.getSize())
+    {
+        cout << "Nepravylnyi nomer!" << endl;
+    }
+
+    const Reservoir& r1 = reservoirs.get(first);
+    const Reservoir& r2 = reservoirs.get(second);
+
+    cout << endl;
+    cout << "Persha vodoima:" << endl;
+    r1.print();
+
+    cout << endl;
+    cout << "Druga vodoima:" << endl;
+    r2.print();
+
+    cout << endl;
+
+    // Perevirka typiv
+
+    if (!r1.sameType(r2))
+    {
+        cout << "Vodoimy nalezhat do riznykh typiv" << endl;
+    }
+    else
+    {
+        cout << "Vodoimy nalezhat do odnoho typu." << endl;
+    }
+
+    // Porivnyannya ploshch
+
+    int result = r1.compareArea(r2);
+
+    if (result == 1)
+    {
+        cout << "Ploshcha pershoyi vodoimy bilsha." << endl;
+    }
+    else if (result == -1)
+    {
+        cout << "Ploshcha drugoyi vodoimy bilsha." << endl;
+    }
+    else if (result == 0)
+    {
+        cout << "Ploshchi vodoim odnakovi." << endl;
+    }
+    else
+    {
+        cout << "Nemozhlyvo porivnyaty ploshchi, typy rizni." << endl;
+    }
+}
+
+
+// kopiyuvannya vodoimy
+
+void copyReservoir(ReservoirArray& reservoirs)
+{
+    if (reservoirs.getSize() == 0)
+    {
+        cout << "Masiv porozhniy" << endl;
+    }
+
+    int number;
+
+    cout << "Vvedit nomer vodoimy dlya kopiyuvannya: ";
+    cin >> number;
+
+    number--;
+
+    if (number < 0 ||
+        number >= reservoirs.getSize())
+    {
+        cout << "Nepravylnyi nomer" << endl;
+    }
+
+    // Vykorystannya konstruktora kopiyuvannya
+
+    Reservoir copy(reservoirs.get(number));
+
+    cout << endl;
+    cout << "Skopiyovana vodoima:" << endl;
+
+    copy.print();
+
+    // Dodayemo kopiyu do masyvu
+
+    reservoirs.add(copy);
+
+    cout << endl;
+    cout << "Kopiyu dodano do masyvu" << endl;
+}
+
+// MAIN
+
+int main()
+{
+
+    ReservoirArray reservoirs;
+
+    // Pryklady stvorennya obyektiv
+
+    Reservoir r1(
+        "Chorne more",
+        "more",
+        400,
+        1000,
+        2210
+    );
+
+    Reservoir r2(
+        "Azovske more",
+        "more",
+        200,
+        300,
+        14
+    );
+
+    Reservoir r3(
+        "Miskyi basein",
+        "basein",
+        25,
+        50,
+        3
+    );
+
+    // Konstruktor kopiyuvannya
+
+    Reservoir r4(r1);
+
+    // Dodayemo obyekty do dynamichnoho masyvu
+
+    reservoirs.add(r1);
+    reservoirs.add(r2);
+    reservoirs.add(r3);
+    reservoirs.add(r4);
+
+    int choice;
+
+    // Holovnyi tsykl
+
+    do
+    {
+        showMenu();
+
+        cin >> choice;
+
+        switch (choice)
+        {
+        case 1:
+            addReservoir(reservoirs);
+            break;
+
+        case 2:
+            reservoirs.printAll();
+            break;
+
+        case 3:
+            removeReservoir(reservoirs);
+            break;
+
+        case 4:
+            compareReservoirs(reservoirs);
+            break;
+
+        case 5:
+            copyReservoir(reservoirs);
+            break;
+
+        case 6:
+            reservoirs.saveText("reservoirs.txt");
+            break;
+
+        case 7:
+            reservoirs.saveBinary("reservoirs.dat");
+            break;
+
+        case 0:
+            cout << "Prohramu zaversheno." << endl;
+            break;
+
+        default:
+            cout << "Nevirnyi punkt menyu!" << endl;
+        }
+
+    } while (choice != 0);
+}
